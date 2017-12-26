@@ -1,6 +1,6 @@
 import { TokenType } from './token-type.enum';
 import { Token } from './token';
-import { Expression, Binary, Unary, Literal, Grouping, Variable, Logical } from './expression';
+import { Expression, Binary, Unary, Literal, Grouping, Variable, Logical, Assignment } from './expression';
 import { error } from './utils';
 
 import {
@@ -61,7 +61,7 @@ export class Parser {
 	}
 
 	private expression(): Expression {
-		return this.or();
+		return this.assignment();
 	}
 
 	private advance(): Token {
@@ -229,6 +229,24 @@ export class Parser {
 		throw new Error(this.peek() + ': Expected expression.');
 	}
 
+	private assignment() {
+		const expression = this.or();
+
+		if (this.match(TokenType.EQUAL)) {
+			const equals = this.previous();
+			const value = this.assignment();
+
+			if (expression instanceof Variable) {
+				const token = (expression as Variable).value;
+				return new Assignment(token, value);
+			}
+
+			throw new Error();
+		}
+
+		return expression;
+	}
+
 	private statement() {
 		if (this.match(TokenType.PRINT)) {
 			return this.printStatement();
@@ -244,6 +262,10 @@ export class Parser {
 
 		if (this.match(TokenType.WHILE)) {
 			return this.whileStatement();
+		}
+
+		if (this.match(TokenType.FOR)) {
+			return this.forLoopStatement();
 		}
 
 		return this.expressionStatement();
@@ -279,12 +301,58 @@ export class Parser {
 	}
 
 	private whileStatement() {
-		this.consume(TokenType.LEFT_PAREN, 'Expected (');
+		this.consume(TokenType.LEFT_PAREN, 'Expected ( after while statement');
 		const condition = this.expression();
-		this.consume(TokenType.RIGHT_PAREN, 'Expected )');
+		this.consume(TokenType.RIGHT_PAREN, 'Expected ) after while statement');
 		const body = this.statement();
 
 		return new WhileStatement(condition, body);
+	}
+
+	private forLoopStatement() {
+		this.consume(TokenType.LEFT_PAREN, 'Expected (');
+
+		let initializer;
+		let condition;
+		let increment;
+
+		if (this.match(TokenType.SEMICOLON)) {
+			initializer = null;
+		} else if (this.match(TokenType.VAR)) {
+			initializer = this.variableDeclarationStatement();
+		} else {
+			initializer = this.expressionStatement();
+		}
+
+		if (!this.check(TokenType.SEMICOLON)) {
+			condition = this.expression();
+		}
+
+		this.consume(TokenType.SEMICOLON, "Expect ';' after loop condition.");
+
+		if (!this.check(TokenType.RIGHT_PAREN)) {
+			increment = this.expression();
+		}
+
+		this.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.");
+
+		let body = this.statement();
+
+		if (increment !== null) {
+			body = new BlockStatement([ body, new ExpressionStatement(increment) ]);
+		}
+
+		if (condition === null) {
+			condition = new Literal(true);
+		}
+
+		body = new WhileStatement(condition, body);
+
+		if (initializer !== null) {
+			body = new BlockStatement([ initializer, body ]);
+		}
+
+		return body;
 	}
 
 	private consume(type: TokenType, message: string): Token | void {

@@ -55,6 +55,16 @@ export class Variable extends Expression {
 	}
 }
 
+export class Assignment extends Expression {
+	constructor(public name: Token, public value: any) {
+		super();
+	}
+
+	public accept(interpreter: Interpreter) {
+		return interpreter.visitAssignmenExpression(this);
+	}
+}
+
 export class Logical extends Expression {
 	constructor(public left: Expression, public operator: Token, public right: Expression) {
 		super();

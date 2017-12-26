@@ -1,3 +1,5 @@
+import { Token } from './token';
+
 export class Environment {
 	private values: { [key: string]: object } = {};
 
@@ -11,6 +13,15 @@ export class Environment {
 		} else {
 			this.values[name] = value;
 		}
+	}
+
+	public assign(name: Token, value: any): void {
+		if (this.get(name.lexeme) !== undefined) {
+			this.define(name.lexeme, value);
+			return;
+		}
+
+		throw new Error(`Undefined ${name.lexeme}`);
 	}
 
 	public get(name: string) {

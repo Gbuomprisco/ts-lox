@@ -1,5 +1,5 @@
 import { Token } from './token';
-import { Literal, Expression, Grouping, Unary, Binary, Variable, Logical } from './expression';
+import { Literal, Expression, Grouping, Unary, Binary, Variable, Logical, Assignment } from './expression';
 import { TokenType } from './token-type.enum';
 import {
 	Statement,
@@ -83,6 +83,14 @@ export class Interpreter {
 
 	public visitVariable(variable: Variable): any {
 		return this.environment.get(variable.value.lexeme);
+	}
+
+	public visitAssignmenExpression(expression: Assignment) {
+		const value = this.evaluate(expression.value);
+
+		this.environment.assign(expression.name, value);
+
+		return value;
 	}
 
 	public visitPrintStatement(statement: PrintStatement) {
