@@ -59,3 +59,13 @@ export class ConditionStatetement extends Statement {
 		return interpreter.visitConditionStatement(this);
 	}
 }
+
+export class WhileStatement extends Statement {
+	constructor(public condition: Expression, public body: Statement) {
+		super();
+	}
+
+	public accept(interpreter: Interpreter) {
+		return interpreter.visitWhileStatement(this);
+	}
+}

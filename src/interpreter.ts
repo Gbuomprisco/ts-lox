@@ -6,7 +6,8 @@ import {
 	ExpressionStatement,
 	PrintStatement,
 	VariableDeclarationStatement,
-	BlockStatement
+	BlockStatement,
+	WhileStatement
 } from './statement';
 
 import { Environment } from './environment';
@@ -136,6 +137,16 @@ export class Interpreter {
 		}
 
 		return this.evaluate(expression.right);
+	}
+
+	public visitWhileStatement(statement: WhileStatement) {
+		const { condition, body } = statement;
+
+		while (Boolean(this.evaluate(condition))) {
+			this.evaluate(body);
+		}
+
+		return null;
 	}
 
 	private accept(expression: Expression) {

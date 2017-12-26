@@ -9,7 +9,8 @@ import {
 	ExpressionStatement,
 	VariableDeclarationStatement,
 	BlockStatement,
-	ConditionStatetement
+	ConditionStatetement,
+	WhileStatement
 } from './statement';
 
 import { Type } from './types.enum';
@@ -241,6 +242,10 @@ export class Parser {
 			return this.conditionStatement();
 		}
 
+		if (this.match(TokenType.WHILE)) {
+			return this.whileStatement();
+		}
+
 		return this.expressionStatement();
 	}
 
@@ -271,6 +276,15 @@ export class Parser {
 		}
 
 		throw new Error();
+	}
+
+	private whileStatement() {
+		this.consume(TokenType.LEFT_PAREN, 'Expected (');
+		const condition = this.expression();
+		this.consume(TokenType.RIGHT_PAREN, 'Expected )');
+		const body = this.statement();
+
+		return new WhileStatement(condition, body);
 	}
 
 	private consume(type: TokenType, message: string): Token | void {
