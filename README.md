@@ -4,4 +4,11 @@ A Typescript implementation for the Lox programming language, described by Bob N
 
 The implementation is not yet complete, as it still lacks functions, for loops and classes.
 
+## Using the interpreter
+
+Run the file index.ts using `ts-node` and provide a parameter for the file to be parsed. From the directory `src`:
+
+    ts-node index.ts <my-lox-file>
+
+### Credits
 This repository used the [typescript-starter](https://github.com/bitjson/typescript-starter) library.
