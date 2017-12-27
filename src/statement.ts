@@ -69,3 +69,23 @@ export class WhileStatement extends Statement {
 		return interpreter.visitWhileStatement(this);
 	}
 }
+
+export class FunctionStatement extends Statement {
+	constructor(public name: Token, public parameters: any[], public body: Statement[]) {
+		super();
+	}
+
+	public accept(interpreter: Interpreter) {
+		return interpreter.visitFunctionStatement(this);
+	}
+}
+
+export class ReturnStatement extends Statement {
+	constructor(public keyword: Token, public value: any) {
+		super();
+	}
+
+	public accept(interpreter: Interpreter) {
+		return interpreter.visitReturnStatement(this);
+	}
+}

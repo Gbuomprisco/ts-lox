@@ -1,5 +1,6 @@
+import { LoxCallable } from './lox-callable';
 import { Token } from './token';
-import { Literal, Expression, Grouping, Unary, Binary, Variable, Logical, Assignment } from './expression';
+import { Literal, Expression, Grouping, Unary, Binary, Variable, Logical, Assignment, Call } from './expression';
 import { TokenType } from './token-type.enum';
 import {
 	Statement,
@@ -7,14 +8,17 @@ import {
 	PrintStatement,
 	VariableDeclarationStatement,
 	BlockStatement,
-	WhileStatement
+	WhileStatement,
+	ReturnStatement
 } from './statement';
 
 import { Environment } from './environment';
-import { ConditionStatetement } from './statement';
+import { ConditionStatetement, FunctionStatement } from './statement';
+import { LoxFunction } from './lox-function';
 
 export class Interpreter {
 	public environment = new Environment(null);
+	public globals = new Environment(null);
 
 	public interpret(statement: Statement) {
 		try {
@@ -157,6 +161,48 @@ export class Interpreter {
 		return null;
 	}
 
+	public visitCallExpression(expression: Call) {
+		const callee = this.evaluate(expression.callee);
+
+		const args = [];
+		for (let argument of expression.args) {
+			args.push(this.evaluate(argument));
+		}
+
+		return callee.call(this, args);
+	}
+
+	public visitFunctionStatement(statement: FunctionStatement) {
+		const fn = new LoxFunction(statement);
+		this.environment.define(statement.name.lexeme, fn);
+
+		return null;
+	}
+
+	public visitReturnStatement(statement: ReturnStatement): any {
+		let value = null;
+
+		if (statement.value !== null) {
+			value = this.evaluate(statement.value);
+		}
+
+		return value;
+	}
+
+	public executeBlock(statements: Statement[], environment: Environment) {
+		const previous = this.environment;
+
+		try {
+			this.environment = environment;
+
+			return statements.map((statement) => {
+				return this.execute(statement);
+			});
+		} finally {
+			this.environment = previous;
+		}
+	}
+
 	private accept(expression: Expression) {
 		return expression.accept(this);
 	}
@@ -167,19 +213,5 @@ export class Interpreter {
 
 	private execute(statement: Statement) {
 		return statement.accept(this);
-	}
-
-	private executeBlock(statements: Statement[], environment: Environment) {
-		const previous = this.environment;
-
-		try {
-			this.environment = environment;
-
-			statements.forEach((statement) => {
-				this.execute(statement);
-			});
-		} finally {
-			this.environment = previous;
-		}
 	}
 }

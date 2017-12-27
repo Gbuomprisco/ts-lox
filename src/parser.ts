@@ -1,6 +1,6 @@
 import { TokenType } from './token-type.enum';
 import { Token } from './token';
-import { Expression, Binary, Unary, Literal, Grouping, Variable, Logical, Assignment } from './expression';
+import { Expression, Binary, Unary, Literal, Grouping, Variable, Logical, Assignment, Call } from './expression';
 import { error } from './utils';
 
 import {
@@ -10,7 +10,9 @@ import {
 	VariableDeclarationStatement,
 	BlockStatement,
 	ConditionStatetement,
-	WhileStatement
+	WhileStatement,
+	FunctionStatement,
+	ReturnStatement
 } from './statement';
 
 import { Type } from './types.enum';
@@ -137,7 +139,35 @@ export class Parser {
 			return new Unary(operator, right);
 		}
 
-		return this.primary();
+		return this.call();
+	}
+
+	private call(): Expression {
+		let expression = this.primary();
+
+		while (true) {
+			if (this.match(TokenType.LEFT_PAREN)) {
+				expression = this.finishCall(expression);
+			} else {
+				break;
+			}
+		}
+
+		return expression;
+	}
+
+	private finishCall(callee: Expression): Expression {
+		const args = [];
+
+		if (!this.check(TokenType.RIGHT_PAREN)) {
+			do {
+				args.push(this.expression());
+			} while (this.match(TokenType.COMMA));
+		}
+
+		const paren = this.consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.") as Token;
+
+		return new Call(callee, paren, args);
 	}
 
 	private addition(): Expression {
@@ -268,7 +298,51 @@ export class Parser {
 			return this.forLoopStatement();
 		}
 
+		if (this.match(TokenType.FUNCTION)) {
+			return this.functionStatement('function');
+		}
+
+		if (this.match(TokenType.RETURN)) {
+			return this.returnStatement();
+		}
+
 		return this.expressionStatement();
+	}
+
+	private functionStatement(kind: string): FunctionStatement {
+		const name = this.consume(TokenType.IDENTIFIER, 'Expect ' + kind + ' name.') as Token;
+
+		this.consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + ' name.');
+		const parameters = [];
+
+		if (!this.check(TokenType.RIGHT_PAREN)) {
+			do {
+				if (parameters.length >= 8) {
+					throw new Error('Cannot have more than 8 parameters.');
+				}
+
+				parameters.push(this.consume(TokenType.IDENTIFIER, 'Expect parameter name.'));
+			} while (this.match(TokenType.COMMA));
+		}
+
+		this.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
+		this.consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + ' body.');
+		const body = this.block();
+
+		return new FunctionStatement(name, parameters, body);
+	}
+
+	private returnStatement() {
+		const keyword = this.previous();
+		let value = null;
+
+		if (!this.check(TokenType.SEMICOLON)) {
+			value = this.expression();
+		}
+
+		this.consume(TokenType.SEMICOLON, "Expect ';' after return value.");
+
+		return new ReturnStatement(keyword, value);
 	}
 
 	private printStatement(): PrintStatement {

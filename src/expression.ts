@@ -74,3 +74,13 @@ export class Logical extends Expression {
 		return interpreter.visitLogicalOperator(this);
 	}
 }
+
+export class Call extends Expression {
+	constructor(public callee: Expression, public paren: Token, public args: Expression[]) {
+		super();
+	}
+
+	public accept(interpreter: Interpreter) {
+		return interpreter.visitCallExpression(this);
+	}
+}

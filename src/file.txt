@@ -1,12 +1,6 @@
-var n = 0;
-
-while (n <= 10) {
-    n = n + 1;
-    print n;
+fn sum(x, y) {
+    return x + y;
 }
 
-print '';
-
-for (var i = 0; i < 10; i = i + 1) {
-    print i;
-}
+var c = sum(1, 2);
+print c;
