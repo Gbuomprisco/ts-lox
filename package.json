@@ -104,10 +104,17 @@
 		"typings"
 	],
 	"nyc": {
-		"exclude": [ "**/*.spec.js", "build/browser/**" ]
+		"exclude": [
+			"**/*.spec.js",
+			"build/browser/**"
+		]
 	},
 	"ava": {
-		"source": [ "test/**/*.js", "build/**/*.js", "!build/**/*.spec.js" ]
+		"source": [
+			"test/**/*.js",
+			"build/**/*.js",
+			"!build/**/*.spec.js"
+		]
 	},
 	"dependencies": {
 		"tslib": "^1.8.1"
